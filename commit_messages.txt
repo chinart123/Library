@@ -1,0 +1,15 @@
+Buoi_1_v1: Old mindset, using variable to define properties of struct, developed system thinking
+
+Buoi_1_v2: Old mindset, using variable to define properties of struct, developed system thinking
+
+Buoi_1_v3: Old mindset, using variable to define properties of struct, developed system thinking
+
+Buoi_1_v4: First successful system thinking build, noted the size of the array (test1.c)
+
+Buoi_1_v5: Adding definitions.h, using macro to optimize logical operation (test1.c)
+
+Buoi_1_v6: Adding delete function, transaction parameter should be pointer type(ONLY NEED THAT DATA TYPE EXIST) instead of array type(NEED FULL DEFINITION OF STRUCT) to avoid "incomplete element type" (test1.c-->test4.c)
+
+Buoi_1_v7: Adding edit function, define 2 new macro MAX_BOOKS & MAX_USERS (test5.c --> test7.c)
+
+Buoi_1_v8: Adding timeline function (timeline.h + timeline.c): (test8.c --> test11.c) + Integrated timeline for all test case(test12.c -->test14.c) + define a bunch new macro for timeline + timeline.txt
