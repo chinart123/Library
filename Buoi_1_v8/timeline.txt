@@ -1,0 +1,220 @@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#include <stdio.h>
+#include <stdlib.h>
+#include "../book.h"
+#include "../user.h"
+#include "../transaction.h"
+#include "timeline.h"
+#include "../definitions.h"
+
+int main() { 
+    // Khởi tạo dữ liệu
+    Book books[3];
+    book_init(&books[0], 1, "The Great Gatsby", "F. Scott Fitzgerald");
+    book_init(&books[1], 2, "1984", "George Orwell");
+    book_init(&books[2], 3, "Dune", "Frank Herbert");
+
+    User users[3];
+    user_init(&users[0], 1, "Alice");
+    user_init(&users[1], 2, "Bob");
+    user_init(&users[2], 3, "Charlie");
+
+    Transaction transactions[MAX_TRANSACTIONS];
+    int transaction_count = 0;
+
+    // Khởi tạo timeline
+    timeline_init();
+
+    // =======================================================
+    // STAGE 8: TIMELINE FUNCTIONALITY TESTING
+    // =======================================================
+    printf("\n========================================================================\n");
+    printf("STAGE 8: TESTING TIMELINE FUNCTIONALITY\n");
+    printf("Expected: A list of 4 events should be displayed with timestamps.\n");
+    printf("========================================================================\n");
+
+    // Giao dịch 1: Alice mượn sách The Great Gatsby
+    printf("\n--- Test Case 8.1: Alice borrows a book ---\n");
+    if (transaction_borrow(transactions, &transaction_count, &books[0], &users[0])) {
+        printf("Test Case 8.1 Passed: Borrow event recorded.\n");
+    } else {
+        printf("Test Case 8.1 Failed.\n");
+    }
+
+    // Giao dịch 2: Bob mượn và trả sách 1984
+    printf("\n--- Test Case 8.2: Bob borrows and returns a book ---\n");
+    if (transaction_borrow(transactions, &transaction_count, &books[1], &users[1])) {
+        if (transaction_return(transactions, &transaction_count, &books[1], &users[1])) {
+            printf("Test Case 8.2 Passed: Borrow and return events recorded.\n");
+        } else {
+            printf("Test Case 8.2 Failed: Return failed.\n");
+        }
+    } else {
+        printf("Test Case 8.2 Failed: Borrow failed.\n");
+    }
+
+    // Giao dịch 3: Xóa mềm một cuốn sách và một người dùng
+    printf("\n--- Test Case 8.3: Soft-deleting a book and a user ---\n");
+    book_delete(&books[2], transactions, transaction_count);
+    user_delete(&users[2], transactions, transaction_count);
+    printf("Test Case 8.3 Passed: Delete events recorded.\n");
+
+    // In toàn bộ timeline
+    printf("\n--- Test Case 8.4: Printing all timeline events ---\n");
+    timeline_print_all_events();
+
+    printf("\n========================================================================\n");
+    printf("END OF STAGE 8\n");
+    printf("========================================================================\n");
+
+    return 0;
+}
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+2. Các trường hợp của Timeline và giai đoạn phát triển
+Hiện tại, chức năng timeline của bạn đã bao quát được các trường hợp cơ bản nhất, đó là:
+
+EVENT_BORROW: Sách được mượn.
+
+EVENT_RETURN: Sách được trả.
+
+EVENT_BOOK_DELETE: Sách bị xóa mềm.
+
+EVENT_USER_DELETE: Người dùng bị xóa mềm.
+
+Tuy nhiên, nếu bạn muốn phát triển một hệ thống quản lý thư viện đầy đủ, sẽ có nhiều trường hợp cần thêm vào. Dưới đây là một số gợi ý cho các giai đoạn phát triển và các trường hợp có thể có.
+
+Giai đoạn 1: Cơ bản (Đã làm)
+Mục tiêu: Ghi lại các giao dịch mượn/trả và xóa mềm sách/người dùng.
+
+Các sự kiện: EVENT_BORROW, EVENT_RETURN, EVENT_BOOK_DELETE, EVENT_USER_DELETE.
+
+Giai đoạn 2: Nâng cao - Ghi nhận các hoạt động quản trị
+Mục tiêu: Ghi lại các hành động chỉnh sửa thông tin sách hoặc người dùng.
+
+Các sự kiện cần thêm:
+
+EVENT_BOOK_EDIT_TITLE: Sách được chỉnh sửa tiêu đề.
+
+EVENT_BOOK_EDIT_AUTHOR: Sách được chỉnh sửa tác giả.
+
+EVENT_USER_EDIT_NAME: Người dùng được chỉnh sửa tên.
+
+Thực hiện:
+
+Thêm các hằng số mới vào file definitions.h.
+
+Cập nhật hàm book_edit trong book.c để gọi timeline_add_event khi tiêu đề hoặc tác giả được thay đổi.
+
+Cập nhật hàm user_edit trong user.c để gọi timeline_add_event khi tên người dùng được thay đổi.
+
+Giai đoạn 3: Phức tạp - Mở rộng các giao dịch
+Mục tiêu: Ghi lại các giao dịch phức tạp hơn và các trạng thái đặc biệt.
+
+Các sự kiện cần thêm:
+
+EVENT_BOOK_CREATE: Sách mới được thêm vào hệ thống.
+
+EVENT_USER_CREATE: Người dùng mới được đăng ký.
+
+EVENT_BOOK_RESTORE: Sách đã bị xóa được phục hồi.
+
+EVENT_USER_RESTORE: Người dùng đã bị xóa được phục hồi.
+
+Thực hiện:
+
+Thêm các hằng số mới vào file definitions.h.
+
+Cập nhật các hàm book_init, user_init để ghi lại sự kiện tạo mới.
+
+Tạo các hàm book_restore và user_restore để phục hồi các đối tượng đã xóa mềm và ghi lại sự kiện.
+
+Giai đoạn 4: Toàn diện - Báo cáo và tìm kiếm
+Mục tiêu: Cải thiện khả năng truy vấn và hiển thị timeline.
+
+Các chức năng cần thêm:
+
+timeline_print_events_by_type(int event_type): In ra các sự kiện theo một loại cụ thể.
+
+timeline_print_events_by_book(int book_id): In ra lịch sử của một cuốn sách.
+
+timeline_print_events_by_user(int user_id): In ra lịch sử hoạt động của một người dùng.
+
+timeline_search_by_date(time_t start_time, time_t end_time): Tìm kiếm sự kiện trong một khoảng thời gian.
+
+Thực hiện:
+
+Thêm khai báo các hàm mới này vào timeline.h.
+
+Viết logic cài đặt trong timeline.c để thực hiện các chức năng tìm kiếm và lọc.
+
+Tổng quan các giai đoạn
+Giai đoạn 1: Timeline cơ bản (mượn, trả, xóa).
+
+Giai đoạn 2: Timeline ghi lại chỉnh sửa.
+
+Giai đoạn 3: Timeline ghi lại tạo mới và phục hồi.
+
+Giai đoạn 4: Các hàm tìm kiếm và báo cáo nâng cao cho Timeline.
+
+Bạn có thể tiến hành từng giai đoạn một để phát triển tính năng này một cách có hệ thống. Hiện tại, chúng ta đã hoàn thành Giai đoạn 1.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+Giai đoạn 2 tập trung vào việc ghi lại các sự kiện chỉnh sửa thông tin. Chúng ta sẽ mở rộng tính năng timeline để ghi lại khi tên sách, tác giả, hoặc tên người dùng được thay đổi.
+
+Các sự kiện cần thêm vào definitions.h:
+EVENT_BOOK_EDIT_TITLE
+
+EVENT_BOOK_EDIT_AUTHOR
+
+EVENT_USER_EDIT_NAME
+
+Các trường hợp cần kiểm thử trong test9.c:
+Chỉnh sửa tiêu đề sách:
+
+Mô tả: Chỉnh sửa tiêu đề của một cuốn sách đang hoạt động.
+
+Kết quả mong muốn: Một sự kiện EVENT_BOOK_EDIT_TITLE được ghi lại trong timeline, kèm theo book_id tương ứng.
+
+Chỉnh sửa tác giả sách:
+
+Mô tả: Chỉnh sửa tác giả của một cuốn sách đang hoạt động.
+
+Kết quả mong muốn: Một sự kiện EVENT_BOOK_EDIT_AUTHOR được ghi lại trong timeline, kèm theo book_id tương ứng.
+
+Chỉnh sửa cả tiêu đề và tác giả:
+
+Mô tả: Chỉnh sửa cả tiêu đề và tác giả của một cuốn sách cùng một lúc.
+
+Kết quả mong muốn: Hai sự kiện, EVENT_BOOK_EDIT_TITLE và EVENT_BOOK_EDIT_AUTHOR, được ghi lại trong timeline.
+
+Chỉnh sửa tên người dùng:
+
+Mô tả: Chỉnh sửa tên của một người dùng đang hoạt động.
+
+Kết quả mong muốn: Một sự kiện EVENT_USER_EDIT_NAME được ghi lại trong timeline, kèm theo user_id tương ứng.
+
+Kết hợp nhiều loại sự kiện:
+
+Mô tả: Thực hiện một chuỗi các hành động (mượn sách, chỉnh sửa tên người dùng, trả sách, chỉnh sửa tên sách) và in ra toàn bộ timeline.
+
+Kết quả mong muốn: Toàn bộ các sự kiện được ghi lại theo đúng thứ tự thời gian.
+
+Để chuẩn bị cho test9.c, bạn cần:
+
+Thêm các #define mới cho các sự kiện trên vào definitions.h.
+
+Cập nhật logic trong các hàm book_edit và user_edit để so sánh giá trị cũ và mới, sau đó gọi timeline_add_event nếu có thay đổi.
+
+Tạo file test9.c và viết các test case như trên để kiểm tra chức năng mới này.
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+-----------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,5 @@
+# Bỏ qua tất cả các thư mục Buoi_1_vX
+Buoi_1_v*/
+
+# Ngoại lệ: Giữ lại thư mục Buoi_1_v8
+!Buoi_1_v8/
