@@ -1,5 +1,13 @@
 # Bỏ qua tất cả các thư mục Buoi_1_vX
 Buoi_1_v*/
 
-# Ngoại lệ: Giữ lại thư mục Buoi_1_v8
+# Bỏ qua tất cả file .exe
+*.exe
+
+# Ngoại lệ: Giữ lại thư mục Buoi_1_v8 và nội dung
 !Buoi_1_v8/
+!Buoi_1_v8/**
+
+# Ngoại lệ: Giữ lại thư mục Buoi_1_v9 và nội dung
+!Buoi_1_v9/
+!Buoi_1_v9/**
