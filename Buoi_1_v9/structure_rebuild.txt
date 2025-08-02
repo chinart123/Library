@@ -1,0 +1,190 @@
+Ok all the build and run task is working, but there is some issue. There are 2 command I need to find out.
+
+//FIRST
+CTRL+SHIFT+B: Build .exe files.
+This process let's me choose stage A,B,C,D, it's good.
+1. But after choosing stage, when choosing which file to build, it's drop down a full list of 14 test instead of the test that live in that folder.
+--> I think it is direct me to the folder tests\tests_stage_X
+--> Instead, It should display only the build task(.exe files) live in the tests_stage_X we choose,
+
+2.If I choose any test that live outside the stage. It crash and showing this type of error:
+cc1.exe: fatal error: D:\HOC_NHUNG\BAI_TAP\Buoi_1\versions\Buoi_1_v9/tests/tests_stage_A/test9.c: No such file or directory
+compilation terminated.
+-->I think this kind of good since it guarantee 
+	+all testX.c files live in the exact test stage folder  
+	+all testX.exe live in the exact build stage folder
+
+
+//SECOND
+F5: Launching .exe files
+3. Could you please it explain to me how this project is done
+	+ by theory and 
+	+ by practice-our system)
+
+4. When I press F5, the IDE ask me to choose launching process which occur the same as 1.(but this time for launch)
+--> I think it is direct me to the folder build\tests_stage_X
+--> Instead, It should display only the launch task(.exe files) live in the tests_stage_X we choose,
+
+5. Then the UI of the build tasks open again. and this time:
+5.1 If I choose wrong build\tests_stage_X: The program crash immediately
+5.2 If I choose correct build\tests_stage_X, then:
++ If I choose the any testX task that live in the range of the corresponding build\tests_stage_X, i will be able to run successfully.
+for example: 5.2.1 If I choose launch test1.exe , then I choose build test1.c or test2.c or test3.c or test4.c: I will be able to run the .exe files
+	     5.2.2 If I choose launch test1.exe , then I choose build test9.c 				: The program will crash I pop up this error
+		5.2.2.1 -->The preLaunchTask 'build_test' terminated with exit code 1.
+		5.2.2.2 -->But the launching still end up running perfectly .exe file. 
+		        -->This can be explain that I have already build and create a testX.exe before, no matter how wrong I choose the build stage or build test, the program will still run because it already found the .exe file needed in build\tests_stage_X\testX.exe
+		5.2.2.3 -->If I delete the .exe file, then I have to choose both the correct build and launch stage.
+5.3 From 5.2.2.3, I can confirm that the function of F5 or CTRL+F5 is the same, that is it will force us to choose launch task, and build task that match up together.
+	5.3.1 But F5 or CTRL+F5 will ignore the second build(after choosing the launch we want), and launch the .exe if it is already existed in build\tests_stage_X\testX.exe.
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+NOTE:
+@ After all, I found this is interesting that the IDE is smart enough to recognize if it already got the infor it needed. 
+@ I think I will not want to change this but rather analyze why this effect appear.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+//tasks.json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build_test",
+      "type": "shell",
+      "command": "C:/msys64/mingw64/bin/gcc.exe",
+      "args": [
+        "-g",
+        "-I${workspaceFolder}/include",
+        "${workspaceFolder}/src/book.c",
+        "${workspaceFolder}/src/timeline.c",
+        "${workspaceFolder}/src/transaction.c",
+        "${workspaceFolder}/src/user.c",
+        "${workspaceFolder}/tests/${input:test_stage}/${input:test_file}.c",
+        "-o",
+        "${workspaceFolder}/build/${input:test_stage}/${input:test_file}.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "test_stage",
+      "type": "pickString",
+      "options": [
+        "tests_stage_A",
+        "tests_stage_B",
+        "tests_stage_C",
+        "tests_stage_D"
+      ],
+      "description": "Select test stage:"
+    },
+    {
+      "id": "test_file",
+      "type": "pickString",
+      "options": [
+        "test1", "test2", "test3", "test4",
+        "test5", "test6", "test7",
+        "test8", "test9", "test10", "test11",
+        "test12", "test13", "test14"
+      ],
+      "description": "Select test to build:"
+    }
+  ]
+}
+-------------------------------------------------------------------------------------------------------------------------------------------------
+launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Current Test",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/${input:test_stage}/${input:test_file}.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "build_test"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "d:/HOC_NHUNG/BAI_TAP/Buoi_1/versions/Buoi_1_v9",
+      "program": "d:/HOC_NHUNG/BAI_TAP/Buoi_1/versions/Buoi_1_v9/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "test_stage",
+      "type": "pickString",
+      "description": "Select test stage:",
+      "options": [
+        "tests_stage_A",
+        "tests_stage_B",
+        "tests_stage_C",
+        "tests_stage_D"
+      ]
+    },
+    {
+      "id": "test_file",
+      "type": "pickString",
+      "description": "Select test to debug:",
+      "options": [
+        "test1",
+        "test2",
+        "test3",
+        "test4",
+        "test5",
+        "test6",
+        "test7",
+        "test8",
+        "test9",
+        "test10",
+        "test11",
+        "test12",
+        "test13",
+        "test14"
+      ]
+    }
+  ]
+}
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Only need a little update. That could you add another external console launch option for me? that's mean we modify the launch.json file only
