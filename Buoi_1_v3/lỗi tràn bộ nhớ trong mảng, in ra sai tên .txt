@@ -1,0 +1,128 @@
+Vấn đề 1: Kết quả in ra terminal không hiển thị đúng
+Trong đầu ra của chương trình, bạn nhận thấy các ký tự lạ như User↑≤_i╥ hoặc ╥ thay vì tên người dùng bình thường như User 1 hoặc User 2. Ngoài ra, ID của người dùng cũng bị sai lệch (ví dụ, User 1 ban đầu có ID là 1 nhưng lại hiển thị ID là 3 hoặc một số lớn ngẫu nhiên như 1767896444). Đây là dấu hiệu của hỏng bộ nhớ (memory corruption), thường do lỗi ghi ngoài giới hạn (out-of-bounds write) hoặc tràn bộ nhớ (buffer overflow).
+Nguyên nhân có thể
+Dựa trên mã nguồn được cung cấp:
+
+Các cấu trúc User, Book, và Transaction sử dụng mảng ký tự (char[]) để lưu tên và tiêu đề, cùng với con trỏ (User *, Book *) trong Transaction.
+Các hàm như user_init và book_init sử dụng strncpy để sao chép chuỗi, với giới hạn kích thước (MAX_NAME_LENGTH - 1, MAX_TITLE_LENGTH - 1) và đảm bảo chuỗi được kết thúc bằng ký tự null (\0). Điều này về cơ bản là đúng và không gây tràn bộ nhớ.
+Tuy nhiên, từ đầu ra:
+
+Ở [TEST 1] và [TEST 2], tên User 1 hiển thị đúng.
+Đến [TEST 3], tên bị hỏng thành User↑≤_i╥.
+Với User 2, tên bị hỏng thành ╥ từ [TEST 10].
+ID của User 1 thay đổi từ 1 thành 3, và của User 2 thành một giá trị lớn ngẫu nhiên (1767896444).
+
+
+Điều này cho thấy bộ nhớ của mảng users (chứa các cấu trúc User) đang bị ghi đè ở đâu đó sau khi khởi tạo ban đầu.
+
+Phân tích sâu hơn
+
+Khởi tạo ban đầu:
+cUser users[3];
+user_init(&users[0], 1, "User 1");
+user_init(&users[1], 2, "User 2");
+user_init(&users[2], 3, "User 3");
+Lúc này, users[0] có id = 1, name = "User 1", v.v. Điều này là chính xác.
+Trong hàm transaction_borrow:
+ctransactions[*count].user = user;
+Hàm này lưu con trỏ User *user vào mảng transactions. Con trỏ này trỏ đến các phần tử trong users (ví dụ: &users[0]). Nếu users[0] bị thay đổi, tất cả các giao dịch liên quan sẽ hiển thị giá trị bị hỏng.
+Đầu ra bất thường:
+
+[TEST 17]: User 3 trả Book 4, dù Book 4 được mượn bởi User 1 (ở [TEST 7]). Nhưng chương trình lại báo thành công, điều này cho thấy transactions[3].user->id đã bị thay đổi để khớp với users[2].id (ID: 3).
+Trong lịch sử giao dịch, User↑≤_i╥ có ID: 3 lại chứa các giao dịch của User 1 (Transaction ID: 1, 2, 3, 4, 8), chứng tỏ users[0] đã bị ghi đè để có id = 3.
+
+
+
+Kết luận
+Vấn đề nằm ở chỗ bộ nhớ của users[0] và users[1] bị ghi đè trong quá trình chạy chương trình, có thể do:
+
+Một lỗi ghi ngoài giới hạn trong mảng transactions hoặc books (nhưng MAX_TRANSACTIONS dường như đủ lớn, và chỉ có 8 giao dịch được tạo).
+Một lỗi không rõ ràng trong mã nguồn (có thể trong các tệp header chưa được cung cấp như book.h, user.h, transaction.h) liên quan đến kích thước mảng hoặc cách định nghĩa cấu trúc.
+
+Cách khắc phục
+Vì không thể xác định chính xác lỗi từ mã đã cung cấp (do không có lỗi rõ ràng như tràn mảng), bạn cần làm như sau:
+
+Thêm lệnh in để kiểm tra:
+
+Sau khi khởi tạo users trong main:
+cfor (int i = 0; i < 3; i++) {
+    printf("User %d: %s (ID: %d)\n", i, users[i].name, users[i].id);
+}
+
+Sau mỗi lần gọi transaction_borrow và transaction_return, in lại thông tin của users:
+cfor (int i = 0; i < 3; i++) {
+    printf("After transaction: User %d: %s (ID: %d)\n", i, users[i].name, users[i].id);
+}
+
+
+Điều này giúp bạn xác định thời điểm name và id bị hỏng.
+Kiểm tra kích thước mảng:
+
+Đảm bảo MAX_NAME_LENGTH, MAX_TITLE_LENGTH, và MAX_AUTHOR_LENGTH trong user.h và book.h đủ lớn (ví dụ: ít nhất 50) và khớp với kích thước khai báo trong cấu trúc User và Book.
+Kiểm tra MAX_TRANSACTIONS trong transaction.h đủ lớn (ít nhất 10, vì chương trình tạo tối đa 8 giao dịch).
+
+
+Sử dụng công cụ gỡ lỗi:
+
+Nếu bạn dùng Windows, hãy thử công cụ như Dr. Memory hoặc bật Address Sanitizer trong trình biên dịch (nếu được hỗ trợ, ví dụ với MSVC hoặc MinGW).
+Các công cụ này sẽ phát hiện lỗi ghi ngoài giới hạn hoặc truy cập bộ nhớ không hợp lệ.
+
+
+
+
+Vấn đề 2: Cảnh báo từ trình gỡ lỗi
+Trình biên dịch báo cảnh báo:
+text"unused parameter 'transactions' [-Wunused-parameter]" in transaction.c, line 4
+Dòng 4 trong transaction.c là:
+cvoid transaction_init(Transaction transactions[], int *count) {
+    *count = 0;
+}
+Nguyên nhân
+Tham số transactions được khai báo nhưng không được sử dụng trong hàm transaction_init. Hàm này chỉ đặt *count = 0 và không cần đến mảng transactions.
+Cách khắc phục
+Bạn có hai lựa chọn:
+
+Loại bỏ tham số không cần thiết:
+
+Sửa hàm trong transaction.c:
+cvoid transaction_init(int *count) {
+    *count = 0;
+}
+
+Sửa khai báo trong transaction.h:
+cvoid transaction_init(int *count);
+
+Trong test1.c, gọi hàm mà không truyền transactions:
+ctransaction_init(&transaction_count);
+
+
+
+Giữ tham số và bỏ qua cảnh báo:
+
+Thêm (void)transactions; vào đầu hàm để báo cho trình biên dịch rằng tham số này cố tình không sử dụng:
+cvoid transaction_init(Transaction transactions[], int *count) {
+    (void)transactions; // Bỏ qua cảnh báo
+    *count = 0;
+}
+
+
+Cách này giữ nguyên giao diện hàm nếu sau này bạn muốn dùng transactions.
+
+Cách 1 được khuyến nghị vì nó làm mã nguồn gọn gàng hơn và loại bỏ tham số không cần thiết.
+
+Tóm tắt giải pháp
+
+Đối với kết quả hiển thị sai:
+
+Thêm lệnh in để kiểm tra users[i].name và users[i].id sau khởi tạo và sau mỗi giao dịch.
+Kiểm tra các định nghĩa trong header (MAX_NAME_LENGTH, MAX_TRANSACTIONS, v.v.) để đảm bảo không có kích thước mảng không khớp.
+Sử dụng công cụ như Dr. Memory để tìm lỗi bộ nhớ.
+
+
+Đối với cảnh báo:
+
+Sửa transaction_init để bỏ tham số transactions hoặc thêm (void)transactions; để tắt cảnh báo.
+
+
+
+Hãy thực hiện các bước trên, đặc biệt là thêm lệnh in, để xác định thời điểm bộ nhớ bị hỏng, từ đó tìm ra nguyên nhân chính xác và khắc phục vấn đề!
