@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build current test file",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.exe",
+                "${file}",
+                "${workspaceFolder}/book.c",
+                "${workspaceFolder}/user.c",
+                "${workspaceFolder}/transaction.c"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": "$gcc"
+        }
+    ]
+}
