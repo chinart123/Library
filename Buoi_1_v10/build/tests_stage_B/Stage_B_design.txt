@@ -1,0 +1,81 @@
+┌──────────────────────────────────────────────────────┐
+│                 [🧠 Application Layer]               │
+│                                                      │
+│  - main.c, test*.c                                   │
+│  - Giao tiếp với người dùng / Giao diện dòng lệnh   │
+│  - Thực thi use-case như create_book, borrow_book   │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+                │ gọi hàm từ
+                ▼
+┌──────────────────────────────────────────────────────┐
+│               [📚 Library Logic Layer]               │
+│                                                      │
+│  - library.c: quản lý toàn cục                       │
+│  - book.c, user.c, transaction.c                     │
+│  - timeline.c: lưu lịch sử                          │
+│  - Mỗi struct có logic riêng: init, print, edit     │
+│                                                      │
+│  ➕ Stage B sẽ thêm:                                  │
+│     - flags.h: gom trạng thái vào bitfield          │
+│     - bit_debug.c: in trạng thái nhị phân để debug  │
+│     - permission.c (nếu cần quản lý quyền hạn)      │
+└──────────────────────────────────────────────────────┘
+                │ thao tác với dữ liệu
+                ▼
+┌──────────────────────────────────────────────────────┐
+│              [💾 Data Definition Layer]              │
+│                                                      │
+│  - definitions.h: cấu hình chung & macro             │
+│  - book.h, user.h, transaction.h                     │
+│  - library.h: gộp tất cả lại                        │
+│                                                      │
+│  ➕ Stage B sẽ nâng cấp:                              │
+│     - Dùng struct Flags thay cho bool                │
+│     - Union/bitfield/bitmask cho struct compact hơn  │
+└──────────────────────────────────────────────────────┘
+                │ dùng low-level type
+                ▼
+┌──────────────────────────────────────────────────────┐
+│              [🔬 Debugging & Encoding Layer]         │
+│                                                      │
+│  - bit_debug.c: in nhị phân, kiểm tra bit            │
+│  - event_encode.c (nếu encode sự kiện gọn)          │
+│  - transaction_encode.c (tuỳ chọn)                  │
+│                                                      │
+│ ✅ Giúp debug trực tiếp trên hệ nhúng                │
+│ ✅ Chuẩn bị sẵn cho UART / lưu file / EEPROM         │
+└──────────────────────────────────────────────────────┘
+
+🧭 Lộ trình gợi ý triển khai từng bước
+🔹 Bước 1: Chuẩn hoá Flags (an toàn và dễ mở rộng)
+Tạo flags.h
+
+Refactor lại Book, User, Transaction để dùng Flags thay vì bool
+
+Cập nhật logic ở các .c (nếu có is_deleted, is_active)
+
+🔹 Bước 2: Tạo công cụ Debug
+Viết bit_debug.c
+
+Hàm: print_flags_binary(const Flags*), print_struct_binary(void* ptr, size_t size)
+
+🔹 Bước 3: Encode compact struct (tuỳ chọn nâng cao)
+Tạo event_encode.c dùng union để gộp type, book_id, user_id thành 32-bit
+
+Chuẩn bị tốt nếu bạn muốn gửi qua UART sau này
+
+🔹 Bước 4: Mở rộng tính năng (tuỳ chọn sau)
+Dùng flags để lưu user type (admin, guest)
+
+Hoặc dùng union cho Transaction nhỏ hơn
+
+Thêm event_permission.c để kiểm tra quyền hạn
+
+✅ Tổng kết: Lợi ích của thiết kế này
+| Ưu điểm     | Giải thích                                          |
+| ----------- | --------------------------------------------------- |
+| Gọn RAM     | Giảm dùng `bool` → thay bằng bitfield trong 1 byte  |
+| An toàn     | Tránh lỗi padding, tránh dùng `malloc`              |
+| Debug dễ    | In nhị phân, biết chính xác đang sai bit nào        |
+| Mở rộng tốt | Cho phép thêm tính năng về sau như quyền, giao tiếp |

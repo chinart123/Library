@@ -1,0 +1,62 @@
+#define MAX_BOOKS 20
+#define MAX_USERS 10
+#define MAX_TRANSACTIONS 20
+
+test2.exe
+===== USER STRUCT =====
+Size of int (id)      : 4 bytes
+Size of name[]        : 100 bytes
+Size of bool (deleted): 1 bytes
+Total size of User    : 108 bytes
+
+test3.exe
+===== BOOK STRUCT =====
+Size of int (id)         : 4 bytes
+Size of title[]          : 100 bytes
+Size of author[]         : 100 bytes
+Size of bool (is_deleted): 1 bytes
+Total size of Book       : 208 bytes
+
+test4.exe
+===== TRANSACTION STRUCT =====
+Size of int (id)           : 4 bytes
+Size of pointer to Book    : 8 bytes
+Size of pointer to User    : 8 bytes
+Size of bool (is_active)   : 1 bytes
+Total size of Transaction  : 32 bytes
+
+test5.exe
+===== EVENT STRUCT (TIMELINE) =====
+Size of type (int)     : 4 bytes
+Size of book_id (int)  : 4 bytes
+Size of user_id (int)  : 4 bytes
+Total size of Event    : 12 bytes
+
+
+
+test6.exe
+===== LIBRARY STRUCT =====
+Size of Book array       : 4160 bytes
+Size of User array       : 1080 bytes
+Size of Transaction array: 640 bytes
+Total size of Library    : 5880 bytes
+
+
+test1.exe
+===== STRUCT SIZE CHECK =====
+Size of Book       : 208 bytes
+Size of User       : 108 bytes
+Size of Transaction: 32 bytes
+Size of Library    : 5880 bytes
+
+===== LIBRARY MEMORY USAGE =====
+Total memory for books       : 4160 bytes (4 KB)
+Total memory for users       : 1080 bytes (1 KB)
+Total memory for transactions: 640 bytes (0 KB)
+Total Library struct size    : 5880 bytes (5 KB)
+
+===== TIMELINE EVENTS =====
+Event 1: Type: BOOK_CREATE | Book ID: 1 | User ID: 0
+Event 2: Type: USER_CREATE | Book ID: 0 | User ID: 1
+
+--->Ideal for STM32 since it contain only 20KB SRAM
