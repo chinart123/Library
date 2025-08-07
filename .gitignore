@@ -11,7 +11,7 @@ Buoi_1_v*/
 !Buoi_1_v7/
 !Buoi_1_v8/
 !Buoi_1_v9/
-!Buoi_1_b10/
+!Buoi_1_v10/
 
 # Giữ toàn bộ nội dung bên trong các thư mục
 !Buoi_1_v1/**
@@ -25,6 +25,6 @@ Buoi_1_v*/
 !Buoi_1_v9/**
 !Buoi_1_v10/**
 
-# Bỏ qua file thực thi và thư mục build
+# Bỏ qua file thực thi nhưng GIỮ LẠI thư mục build
 *.exe
-build/
+!Buoi_1_v*/build/
