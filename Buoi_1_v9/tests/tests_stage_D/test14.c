@@ -66,6 +66,7 @@ int main() {
 
     // Edit User1
     printf("\n[TEST 2.1] Edit User1\n");
+    user_print_info(&users[0]);
     user_edit(&users[0], "User1_Updated");
     user_print_info(&users[0]);
 

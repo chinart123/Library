@@ -1,0 +1,33 @@
+A: 
++ Test14.c 
++  Transaction.c 
++  definitions.h,
++
+ 
+ Thiếu hàm print_single_event(). Hiện tại hàm này Chỉ biết phân loại event truyền tham số vào print in tất cả.
+
+
+B:
++ Test14.c 
++  definitions.h 
++ user.h
+2. Hàm user_print_infor() chưa in thông tin sách mà user đó đang mượn
+
+
+3. v9: Điều kiện hàm transaction_borrow() bị sai ở hàm timeline_add_event(EVENT_BORROW_FAILED_LIMIT) mà phải là BOOK_EXISTED và USER_EXISTED 
+		--> do chưa dùng typedef enum Book
+		--> hoặc do chưa bổ sung BOOK_EXISTED và USER_EXISTED vào typedef enum EventType
+		--> hoặc do bool is_deleted gây nhầm lẫn
+		
+FunctionResult transaction_borrow(Transaction transactions[], int *count, Book *book, User *user) {
+    if (!book || !user || book->is_deleted || user->is_deleted) {
+        printf("Error: Invalid book or user, or already deleted.\n");
+        timeline_add_event(EVENT_BORROW_FAILED_LIMIT,
+                           book ? book->id : 0,
+                           user ? user->id : 0);
+        return RESULT_FAILED_INVALID_INPUT;
+    }
+    if (*count >= MAX_TRANSACTIONS) {
+        printf("Error: Maximum transactions reached.\n");
+        timeline_add_event(EVENT_BORROW_FAILED_LIMIT, book->id, user->id);
+        return RESULT_FAILED_INVALID_INPUT;
