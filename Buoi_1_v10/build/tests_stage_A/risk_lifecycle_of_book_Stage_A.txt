@@ -1,0 +1,96 @@
+
+
+🧨 Trường hợp bạn viết:
+Book* create_book(int id, const char* title, const char* author) {
+    Book* b = (Book*)malloc(sizeof(Book));  // cấp phát động
+    if (!b) return NULL;
+
+    b->id = id;
+    strcpy(b->title, title);
+    strcpy(b->author, author);
+    b->is_deleted = false;
+
+    return b;
+}
+
+
+📊 SƠ ĐỒ RAM (Khi create_book() đang chạy)
++-----------------------------+  ← Stack cao
+| Return address              |
+| Previous frame pointer      |
+|-----------------------------|
+| create_book() stack frame   |
+|-----------------------------|
+| id (int)                    |
+| title (char*)               | → trỏ vào Flash (chuỗi hằng)
+| author (char*)              | → trỏ vào Flash (chuỗi hằng)
+| b (Book*)                   | → trỏ vào Heap !!!
++-----------------------------+
+       ...
+       ...
++=============================+
+| Global/static memory        |
+|-----------------------------|
+| library.books[] (0 KB)      | ❌ Không dùng
+| timeline[] (0 KB)           |
++=============================+
+| .bss/.data (biến toàn cục)  |
++-----------------------------+
+| Heap (malloc zone)          | ← Dữ liệu Book* b được cấp phát ở đây
+|-----------------------------|
+| Book                        |
+|  - id                       |
+|  - title[100]               |
+|  - author[100]              |
+|  - is_deleted               |
++-----------------------------+
+| Heap grows upward ⬆         |
++-----------------------------+
+
+❌ RỦI RO (nếu bạn dùng malloc() sai cách)
+
+| Rủi ro                                     | Giải thích                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| **1. Không có `free()`**                   | Nếu bạn không `free()` sau khi dùng, bạn bị **rò rỉ bộ nhớ (memory leak)**.                                   |
+| **2. Heap nhỏ**                            | STM32F103C8T6 chỉ có 20 KB RAM → Heap thường chỉ có vài KB (nếu có)                                           |
+| **3. Gây treo hệ thống**                   | Khi RAM bị cạn vì `malloc()` liên tục, chương trình có thể **crash hoặc treo**.                               |
+| **4. Khó debug trên nhúng**                | Không có hệ thống quản lý heap như trên PC, malloc dễ gây **hành vi undefined** nếu bạn không kiểm soát được. |
+| **5. Không xác định vị trí dữ liệu**       | Dữ liệu phân tán khó quản lý → không tối ưu cache hoặc DMA.                                                   |
+| **6. RTOS hoặc ISR không nên dùng malloc** | Trong hệ thống thời gian thực (Real-Time), malloc khiến hệ thống không còn "real-time" nữa.                   |
+
+
+✅ Vậy cách đúng là gì?
+Không dùng malloc() nếu không bắt buộc
+
+Thay vào đó dùng:
+
+Cấu trúc tĩnh như library.books[]
+
+Vòng đời dữ liệu xác định rõ (allocate once, use forever)
+
+Nếu bắt buộc phải dùng malloc:
+
+Cần có hàm free()
+
+Cần kiểm tra vùng nhớ còn trống
+
+
+🎯 Tóm tắt
+| Tình huống        | Dùng tốt ở đâu?                               |
+| ----------------- | --------------------------------------------- |
+| Dữ liệu tĩnh      | 🟢 STM32, nhúng nói chung                     |
+| malloc + free     | 🟡 Trên PC, hoặc hệ thống lớn                 |
+| malloc không free | 🔴 Gây rò rỉ bộ nhớ, rất nguy hiểm trên STM32 |
+
+
+✅ Đúng rồi — các đối tượng như User, Transaction, Timeline, Library cũng nên theo mindset giống như Book:
+
+Không nên dùng malloc()
+
+Nên dùng mảng tĩnh đã khai báo sẵn trong Library
+
+Tránh cấp phát động nếu không thực sự cần
+
+Vòng đời và vị trí dữ liệu phải rõ ràng (dễ debug, tối ưu RAM)
+
+👉 Đây là chiến lược tốt nhất cho STM32 hoặc bất kỳ hệ thống nhúng RAM thấp nào

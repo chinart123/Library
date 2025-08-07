@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build_test",
+      "type": "shell",
+      "command": "C:/msys64/mingw64/bin/gcc.exe",
+      "args": [
+        "-g",
+        "-I${workspaceFolder}/include",
+        "${workspaceFolder}/src/book.c",
+        "${workspaceFolder}/src/timeline.c",
+        "${workspaceFolder}/src/transaction.c",
+        "${workspaceFolder}/src/user.c",
+        "${workspaceFolder}/src/bitflags_viewer.c",
+        
+        "${workspaceFolder}/tests/${input:test_stage}/${input:test_file}.c",
+        "-o",
+        "${workspaceFolder}/build/${input:test_stage}/${input:test_file}.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "test_stage",
+      "type": "pickString",
+      "options": [
+        "tests_stage_A",
+        "tests_stage_B",
+        "tests_stage_C",
+        "tests_stage_D"
+      ],
+      "description": "Select test stage:"
+    },
+    {
+      "id": "test_file",
+      "type": "pickString",
+      "options": [
+        "test1", "test2", "test3", "test4",
+        "test5", "test6", "test7",
+        "test8", "test9", "test10", "test11",
+        "test12", "test13", "test14"
+      ],
+      "description": "Select test to build:"
+    }
+  ]
+}
